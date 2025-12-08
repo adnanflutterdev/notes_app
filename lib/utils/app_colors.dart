@@ -8,4 +8,7 @@ class AppColors {
   static const textColor = Colors.white;
   static const secondaryTextColor = Color.fromARGB(255, 209, 209, 209);
   static const titleTextColor = Color.fromARGB(255, 187, 187, 187);
+  static const activeColor = Color.fromARGB(255, 77, 255, 0);
+  static const error = Color.fromARGB(255, 255, 47, 0);
+
 }

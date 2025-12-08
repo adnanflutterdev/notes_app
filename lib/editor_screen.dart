@@ -1,31 +1,97 @@
 import 'package:flutter/material.dart';
+import 'package:notes/model/note_model.dart';
 import 'package:notes/utils/app_colors.dart';
 import 'package:notes/utils/notes_color.dart';
 
-class EditorScreen extends StatelessWidget {
-  const EditorScreen({super.key});
+class EditorScreen extends StatefulWidget {
+  const EditorScreen({super.key, this.note});
+
+  final NoteModel? note;
+
+  @override
+  State<EditorScreen> createState() => _EditorScreenState();
+}
+
+class _EditorScreenState extends State<EditorScreen> {
+  int bgColorIndex = 0;
+  TextEditingController title = TextEditingController();
+  TextEditingController content = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.note != null) {
+      title.text = widget.note!.title;
+      content.text = widget.note!.content;
+      bgColorIndex = notesColor.indexOf(widget.note!.color);
+      print(bgColorIndex);
+    }
+  }
+
+  void openColorList(TapDownDetails postion) {
+    final dx = postion.globalPosition.dx;
+    final dy = postion.globalPosition.dy;
+    showMenu(
+      context: context,
+
+      position: RelativeRect.fromLTRB(dx, 50, 15, dy),
+      color: AppColors.surface.withValues(alpha: 0.5),
+      items: List.generate(notesColor.length, (index) {
+        return PopupMenuItem(
+          onTap: () {
+            setState(() {
+              bgColorIndex = index;
+            });
+          },
+          child: Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: notesColor[index],
+              border: Border.all(
+                color: index == bgColorIndex
+                    ? AppColors.activeColor
+                    : AppColors.white,
+              ),
+            ),
+          ),
+        );
+      }),
+
+      //  notesColor.map((Color color) {
+      //   return PopupMenuItem(
+      //     child: Container(
+      //       height: 40,
+      //       decoration: BoxDecoration(
+      //         color: color,
+      //         border: Border.all(color: AppColors.white),
+      //       ),
+      //     ),
+      //   );
+      // }).toList(),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    void openColorList(TapDownDetails postion) {
-      final dx = postion.globalPosition.dx;
-      final dy = postion.globalPosition.dy;
-      showMenu(
-        context: context,
-
-        position: RelativeRect.fromLTRB(dx, 50, 15, dy),
-        color: AppColors.surface,
-        items: notesColor.map((Color color) {
-          return PopupMenuItem(child: Container(height: 40, color: color));
-        }).toList(),
+    void save() {
+      NoteModel note = NoteModel(
+        title: title.text,
+        content: content.text,
+        createdAt: DateTime.now(),
+        color: notesColor[bgColorIndex],
+        editedAt: widget.note != null ? DateTime.now() : null,
       );
+
+      Navigator.pop(context, note);
+      // Navigator.of(context).pop(note);
     }
 
     return Scaffold(
-      backgroundColor: AppColors.bg,
+      backgroundColor: notesColor[bgColorIndex],
       appBar: AppBar(
-        backgroundColor: AppColors.bg,
+        backgroundColor: notesColor[bgColorIndex].withValues(alpha: 0.6),
 
+        elevation: 3,
         leading: Padding(
           padding: const EdgeInsets.all(12.0),
           child: GestureDetector(
@@ -54,8 +120,9 @@ class EditorScreen extends StatelessWidget {
               width: 30,
               height: 30,
               decoration: BoxDecoration(
-                color: notesColor[0],
+                color: notesColor[bgColorIndex],
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.white),
               ),
             ),
           ),
@@ -71,6 +138,7 @@ class EditorScreen extends StatelessWidget {
               constraints: BoxConstraints(maxHeight: 200),
               child: TextField(
                 maxLines: null,
+                controller: title,
                 style: TextStyle(
                   fontSize: 30,
                   color: AppColors.textColor,
@@ -95,6 +163,7 @@ class EditorScreen extends StatelessWidget {
             Expanded(
               child: TextField(
                 maxLines: null,
+                controller: content,
                 style: TextStyle(
                   fontSize: 20,
                   color: AppColors.textColor,
@@ -121,7 +190,19 @@ class EditorScreen extends StatelessWidget {
       ),
 
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          if (content.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).clearSnackBars();
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Please provide content'),
+                backgroundColor: AppColors.error,
+              ),
+            );
+          } else {
+            save();
+          }
+        },
         backgroundColor: AppColors.surface,
         shape: CircleBorder(),
         child: Icon(Icons.save, color: Colors.white, size: 30),

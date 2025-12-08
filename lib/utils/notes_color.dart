@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:notes/utils/app_colors.dart';
 
 List<Color> notesColor = [
+  AppColors.surface,
   Colors.pinkAccent,
   Colors.redAccent,
   Colors.tealAccent,

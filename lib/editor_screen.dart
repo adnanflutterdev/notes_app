@@ -77,7 +77,10 @@ class _EditorScreenState extends State<EditorScreen> {
       NoteModel note = NoteModel(
         title: title.text,
         content: content.text,
-        createdAt: DateTime.now(),
+        // createdAt: DateTime.now(),
+        createdAt: widget.note == null
+            ? DateTime.now()
+            : widget.note!.createdAt,
         color: notesColor[bgColorIndex],
         editedAt: widget.note != null ? DateTime.now() : null,
       );
@@ -141,7 +144,9 @@ class _EditorScreenState extends State<EditorScreen> {
                 controller: title,
                 style: TextStyle(
                   fontSize: 30,
-                  color: AppColors.textColor,
+                  color: notesColor[bgColorIndex] == AppColors.surface
+                      ? AppColors.textColor
+                      : AppColors.bg,
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
@@ -166,14 +171,18 @@ class _EditorScreenState extends State<EditorScreen> {
                 controller: content,
                 style: TextStyle(
                   fontSize: 20,
-                  color: AppColors.textColor,
+                  color: notesColor[bgColorIndex] == AppColors.surface
+                      ? AppColors.textColor
+                      : AppColors.bg,
                   fontWeight: FontWeight.w500,
                 ),
                 decoration: InputDecoration(
                   hintText: 'Type something...',
                   hintStyle: TextStyle(
                     fontSize: 20,
-                    color: AppColors.titleTextColor,
+                    color: notesColor[bgColorIndex] == AppColors.surface
+                        ? AppColors.secondaryTextColor
+                        : AppColors.surface,
                     fontWeight: FontWeight.w500,
                   ),
                   enabledBorder: OutlineInputBorder(

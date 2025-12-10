@@ -14,10 +14,62 @@ class SearchScreen extends StatefulWidget {
 class _SearchScreenState extends State<SearchScreen> {
   List<NoteModel> searchedNotes = [];
 
+  bool isLowToHigh = true;
+
   @override
   void initState() {
     super.initState();
     searchedNotes = widget.notes;
+  }
+
+  void sortByCreatedAt() {
+    searchedNotes = widget.notes;
+    if (isLowToHigh) {
+      searchedNotes.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    } else {
+      searchedNotes.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    }
+    isLowToHigh = !isLowToHigh;
+    setState(() {});
+  }
+
+  void sortByUpdatedAt() {
+    searchedNotes = widget.notes;
+
+    if (isLowToHigh) {
+      searchedNotes.sort((a, b) => b.editedAt.compareTo(a.editedAt));
+      
+    } else {
+      searchedNotes.sort((a, b) => a.editedAt.compareTo(b.editedAt));
+    }
+    isLowToHigh = !isLowToHigh;
+    setState(() {});
+  }
+
+  void sortByTitle() {
+    searchedNotes = widget.notes;
+
+    if (isLowToHigh) {
+      searchedNotes.sort((a, b) => b.title.compareTo(a.title));
+      
+    } else {
+      searchedNotes.sort((a, b) => a.title.compareTo(b.title));
+    }
+    isLowToHigh = !isLowToHigh;
+    setState(() {});
+  }
+
+  void sortByContent() {
+    searchedNotes = widget.notes;
+
+    if (isLowToHigh) {
+      searchedNotes.sort((a, b) => b.content.compareTo(a.content));
+      
+    } else {
+      searchedNotes.sort((a, b) => a.content.compareTo(b.content));
+    }
+    isLowToHigh = !isLowToHigh;
+    setState(() {});
   }
 
   void openMenu(Size size) {
@@ -25,10 +77,23 @@ class _SearchScreenState extends State<SearchScreen> {
       position: RelativeRect.fromLTRB(size.width, 80, 30, size.height),
       context: context,
       items: [
-        PopupMenuItem(child: Text('Sort By Crated At')),
-        PopupMenuItem(child: Text('Sort By Updated At')),
-        PopupMenuItem(child: Text('Sort By title')),
-        PopupMenuItem(child: Text('Sort By content')),
+        PopupMenuItem(
+          onTap: () {
+            sortByCreatedAt();
+          },
+          child: Text('Sort By Created At'),
+        ),
+        PopupMenuItem(
+          onTap: sortByUpdatedAt,
+          child: Text('Sort By Updated At'),
+        ),
+        PopupMenuItem(onTap: () => sortByTitle(), child: Text('Sort By title')),
+        PopupMenuItem(
+          onTap: () {
+            sortByContent();
+          },
+          child: Text('Sort By content'),
+        ),
       ],
     );
   }
@@ -105,6 +170,11 @@ class _SearchScreenState extends State<SearchScreen> {
                             setState(() {});
                           },
                         ),
+                      ),
+                      SizedBox(width: 10),
+                      Icon(
+                        isLowToHigh ? Icons.arrow_downward : Icons.arrow_upward,
+                        color: AppColors.white,
                       ),
                       IconButton(
                         onPressed: () {

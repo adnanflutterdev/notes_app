@@ -19,6 +19,7 @@ class _AllNotesState extends State<AllNotes> {
       showDialog(
         context: context,
         builder: (context) {
+          NoteModel deletedNote = widget.notes[index];
           return AlertDialog(
             backgroundColor: AppColors.surface,
             title: Text(
@@ -44,6 +45,20 @@ class _AllNotesState extends State<AllNotes> {
                   widget.notes.removeAt(index);
                   Navigator.pop(context);
                   setState(() {});
+
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Note Deleted...'),
+                      action: SnackBarAction(
+                        label: 'Undo',
+                        onPressed: () {
+                          widget.notes.insert(index, deletedNote);
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                  );
                 },
                 child: Text('Delete', style: TextStyle(color: AppColors.error)),
               ),
@@ -60,7 +75,7 @@ class _AllNotesState extends State<AllNotes> {
 
         DateTime dateTime1 = note.createdAt;
 
-        DateTime? dateTime2 = note.editedAt;
+        DateTime dateTime2 = note.editedAt;
 
         String time1 =
             '${dateTime1.hour}:${dateTime1.minute}:${dateTime1.second} ${dateTime1.hour >= 12 ? 'PM' : 'AM'}';
@@ -69,7 +84,11 @@ class _AllNotesState extends State<AllNotes> {
         String editedDate = '';
         String editedTime = '';
 
-        if (dateTime2 != null) {
+        if (dateTime2 == dateTime1) {
+          print('Both are equal');
+        }
+
+        if (dateTime1 != dateTime2) {
           editedDate = '${dateTime2.day}/${dateTime2.month}/${dateTime2.year}';
           editedTime =
               '${dateTime2.hour}:${dateTime2.minute}:${dateTime2.second} ${dateTime2.hour >= 12 ? 'PM' : 'AM'}';
@@ -142,7 +161,7 @@ class _AllNotesState extends State<AllNotes> {
                             : AppColors.bg,
                       ),
                     ),
-                    if (note.editedAt != null)
+                    if (note.editedAt != note.createdAt)
                       Text(
                         'Edited at: $editedTime $editedDate',
                         style: TextStyle(

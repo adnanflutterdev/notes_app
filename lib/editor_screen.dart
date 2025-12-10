@@ -74,15 +74,14 @@ class _EditorScreenState extends State<EditorScreen> {
   @override
   Widget build(BuildContext context) {
     void save() {
+      DateTime dateTime = DateTime.now();
       NoteModel note = NoteModel(
         title: title.text,
         content: content.text,
         // createdAt: DateTime.now(),
-        createdAt: widget.note == null
-            ? DateTime.now()
-            : widget.note!.createdAt,
+        createdAt: widget.note == null ? dateTime : widget.note!.createdAt,
         color: notesColor[bgColorIndex],
-        editedAt: widget.note != null ? DateTime.now() : null,
+        editedAt: dateTime,
       );
 
       Navigator.pop(context, note);

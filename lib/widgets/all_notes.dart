@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:notes/editor_screen.dart';
 import 'package:notes/model/note_model.dart';
 import 'package:notes/utils/app_colors.dart';
+import 'package:notes/utils/notes_color.dart';
 
 class AllNotes extends StatefulWidget {
   const AllNotes({super.key, required this.notes, required this.isHomeScreen});
@@ -44,7 +45,7 @@ class _AllNotesState extends State<AllNotes> {
                 onPressed: () {
                   widget.notes.removeAt(index);
                   Navigator.pop(context);
-                  setState(() {});
+                  // setState(() {});
 
                   ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -54,7 +55,7 @@ class _AllNotesState extends State<AllNotes> {
                         label: 'Undo',
                         onPressed: () {
                           widget.notes.insert(index, deletedNote);
-                          setState(() {});
+                          // setState(() {});
                         },
                       ),
                     ),
@@ -97,23 +98,18 @@ class _AllNotesState extends State<AllNotes> {
           padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
           child: GestureDetector(
             onTap: () async {
-              final newNote = await Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (context) => EditorScreen(note: note),
                 ),
               );
-              if (newNote != null) {
-                // notes.removeAt(index);
-                // notes.insert(index, newNote);
-
-                widget.notes[index] = newNote;
-                setState(() {});
-              }
+              print('Popped');
+              // setState(() {});
             },
             child: Container(
               decoration: BoxDecoration(
-                color: note.color,
+                color: notesColor[note.colorIndex],
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Padding(
@@ -126,7 +122,8 @@ class _AllNotesState extends State<AllNotes> {
                         Text(
                           "$time1 $date",
                           style: TextStyle(
-                            color: note.color == AppColors.surface
+                            color:
+                                notesColor[note.colorIndex] == AppColors.surface
                                 ? AppColors.secondaryTextColor
                                 : AppColors.surface,
                             fontSize: 12,
@@ -146,7 +143,8 @@ class _AllNotesState extends State<AllNotes> {
                       Text(
                         note.title,
                         style: TextStyle(
-                          color: note.color == AppColors.surface
+                          color:
+                              notesColor[note.colorIndex] == AppColors.surface
                               ? AppColors.textColor
                               : AppColors.bg,
                           fontSize: 20,
@@ -156,7 +154,7 @@ class _AllNotesState extends State<AllNotes> {
                     Text(
                       note.content,
                       style: TextStyle(
-                        color: note.color == AppColors.surface
+                        color: notesColor[note.colorIndex] == AppColors.surface
                             ? AppColors.textColor
                             : AppColors.bg,
                       ),
@@ -165,7 +163,8 @@ class _AllNotesState extends State<AllNotes> {
                       Text(
                         'Edited at: $editedTime $editedDate',
                         style: TextStyle(
-                          color: note.color == AppColors.surface
+                          color:
+                              notesColor[note.colorIndex] == AppColors.surface
                               ? AppColors.secondaryTextColor
                               : AppColors.surface,
                           fontSize: 12,

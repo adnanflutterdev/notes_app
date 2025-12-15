@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
+import 'package:notes/global/my_notes.dart';
 import 'package:notes/model/note_model.dart';
 import 'package:notes/utils/app_colors.dart';
 import 'package:notes/utils/notes_color.dart';
@@ -23,7 +25,7 @@ class _EditorScreenState extends State<EditorScreen> {
     if (widget.note != null) {
       title.text = widget.note!.title;
       content.text = widget.note!.content;
-      bgColorIndex = notesColor.indexOf(widget.note!.color);
+      bgColorIndex = widget.note!.colorIndex;
       print(bgColorIndex);
     }
   }
@@ -73,18 +75,44 @@ class _EditorScreenState extends State<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    void save() {
+    Future<List<NoteModel>> getNotes() async {
+        final db = await Hive.openBox('notes');
+        if (db.keys.toList().isEmpty) {
+          return [];
+        }
+        List keys = db.keys.toList();
+
+        List<NoteModel> notes = keys
+            .map((id) => NoteModel.fromMap(db.get(id)))
+            .toList();
+        return notes;
+      }
+    void save() async {
       DateTime dateTime = DateTime.now();
+      String id = '${dateTime.microsecondsSinceEpoch}';
       NoteModel note = NoteModel(
+        id: widget.note == null ? id : widget.note!.id,
         title: title.text,
         content: content.text,
         // createdAt: DateTime.now(),
         createdAt: widget.note == null ? dateTime : widget.note!.createdAt,
-        color: notesColor[bgColorIndex],
+        colorIndex: bgColorIndex,
         editedAt: dateTime,
       );
 
-      Navigator.pop(context, note);
+      final db = await Hive.openBox('notes');
+
+      if (widget.note != null) {
+        print(note.toMap());
+        db.delete(widget.note!.id);
+        await db.put(widget.note!.id, note.toMap());
+      } else {
+        await db.put(id, note.toMap());
+      }
+      notes.value = await getNotes();
+      
+
+      Navigator.pop(context);
       // Navigator.of(context).pop(note);
     }
 

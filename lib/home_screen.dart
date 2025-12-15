@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:hive/hive.dart';
 import 'package:notes/editor_screen.dart';
+import 'package:notes/global/my_notes.dart';
 import 'package:notes/model/note_model.dart';
 import 'package:notes/search_screen.dart';
 import 'package:notes/utils/app_colors.dart';
@@ -14,7 +16,29 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List<NoteModel> notes = [];
+  Future<List<NoteModel>> getNotes() async {
+    final db = await Hive.openBox('notes');
+    if (db.keys.toList().isEmpty) {
+      return [];
+    }
+    List keys = db.keys.toList();
+
+    List<NoteModel> notes = keys
+        .map((id) => NoteModel.fromMap(db.get(id)))
+        .toList();
+    return notes;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  void loadData() async {
+    notes.value = await getNotes();
+  }
+
   void showExitDialog() {
     showDialog(
       context: context,
@@ -101,7 +125,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SearchScreen(notes: notes),
+                    builder: (context) => SearchScreen(notes: notes.value),
                   ),
                 );
               },
@@ -138,8 +162,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
 
-        body: notes.isEmpty
-            ? Column(
+        body: ValueListenableBuilder(
+          valueListenable: notes,
+          builder: (context, value, child) {
+            if (value.isEmpty) {
+              return Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Image.asset('assets/images/no_notes.png'),
@@ -148,26 +175,37 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(color: AppColors.textColor),
                   ),
                 ],
-              )
-            : AllNotes(notes: notes, isHomeScreen: true),
+              );
+            } else {
+              return AllNotes(notes: value, isHomeScreen: true);
+            }
+            // return FutureBuilder(
+            //   future: getNotes(),
+            //   builder: (context, snapshot) {
+            //     if (snapshot.connectionState == ConnectionState.waiting) {
+            //       return CircularProgressIndicator();
+            //     } else if (snapshot.hasError) {
+            //       print(snapshot.error);
+            //       return Text('Error occured');
+            //     } else if (snapshot.data == null || snapshot.data!.isEmpty) {
+            //       return
+            //     }
+            //     notes.value = snapshot.data!;
+            //     print(notes.value);
+            //     return
+            //   },
+            // );
+          },
+        ),
 
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            final result = await Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => EditorScreen()),
             );
 
-            if (result == null) {
-              print('Null');
-            } else {
-              // notes.add(result);
-              // setState(() {
-              // });
-              setState(() {
-                notes.add(result);
-              });
-            }
+            // setState(() {});
           },
           backgroundColor: AppColors.surface,
           shape: CircleBorder(),

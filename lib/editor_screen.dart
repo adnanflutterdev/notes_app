@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:notes/global/get_notes.dart';
 import 'package:notes/global/my_notes.dart';
 import 'package:notes/model/note_model.dart';
 import 'package:notes/utils/app_colors.dart';
@@ -75,18 +76,9 @@ class _EditorScreenState extends State<EditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    Future<List<NoteModel>> getNotes() async {
-        final db = await Hive.openBox('notes');
-        if (db.keys.toList().isEmpty) {
-          return [];
-        }
-        List keys = db.keys.toList();
+    
 
-        List<NoteModel> notes = keys
-            .map((id) => NoteModel.fromMap(db.get(id)))
-            .toList();
-        return notes;
-      }
+
     void save() async {
       DateTime dateTime = DateTime.now();
       String id = '${dateTime.microsecondsSinceEpoch}';

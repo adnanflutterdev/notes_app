@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 import 'package:notes/editor_screen.dart';
+import 'package:notes/global/get_notes.dart';
 import 'package:notes/global/my_notes.dart';
 import 'package:notes/model/note_model.dart';
 import 'package:notes/search_screen.dart';
@@ -16,18 +17,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Future<List<NoteModel>> getNotes() async {
-    final db = await Hive.openBox('notes');
-    if (db.keys.toList().isEmpty) {
-      return [];
-    }
-    List keys = db.keys.toList();
 
-    List<NoteModel> notes = keys
-        .map((id) => NoteModel.fromMap(db.get(id)))
-        .toList();
-    return notes;
-  }
 
   @override
   void initState() {
@@ -125,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => SearchScreen(notes: notes.value),
+                    builder: (context) => SearchScreen(),
                   ),
                 );
               },
@@ -177,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               );
             } else {
-              return AllNotes(notes: value, isHomeScreen: true);
+              return AllNotes(isHomeScreen: true);
             }
             // return FutureBuilder(
             //   future: getNotes(),

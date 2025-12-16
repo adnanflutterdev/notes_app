@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:notes/editor_screen.dart';
+import 'package:notes/global/get_notes.dart';
+import 'package:notes/global/my_notes.dart';
 import 'package:notes/model/note_model.dart';
 import 'package:notes/utils/app_colors.dart';
 import 'package:notes/utils/notes_color.dart';
 
 class AllNotes extends StatefulWidget {
-  const AllNotes({super.key, required this.notes, required this.isHomeScreen});
-  final List<NoteModel> notes;
+  const AllNotes({super.key, required this.isHomeScreen});
+  // final List<NoteModel> notes;
   final bool isHomeScreen;
 
   @override
@@ -20,7 +23,7 @@ class _AllNotesState extends State<AllNotes> {
       showDialog(
         context: context,
         builder: (context) {
-          NoteModel deletedNote = widget.notes[index];
+          NoteModel deletedNote = notes.value[index];
           return AlertDialog(
             backgroundColor: AppColors.surface,
             title: Text(
@@ -42,8 +45,14 @@ class _AllNotesState extends State<AllNotes> {
                 ),
               ),
               TextButton(
-                onPressed: () {
-                  widget.notes.removeAt(index);
+                onPressed: () async {
+                  // widget.notes.removeAt(index);
+                  NoteModel note = notes.value[index];
+                  final db = await Hive.openBox('notes');
+
+                  await db.delete(note.id);
+
+                  notes.value = await getNotes();
                   Navigator.pop(context);
                   // setState(() {});
 
@@ -53,8 +62,12 @@ class _AllNotesState extends State<AllNotes> {
                       content: Text('Note Deleted...'),
                       action: SnackBarAction(
                         label: 'Undo',
-                        onPressed: () {
-                          widget.notes.insert(index, deletedNote);
+                        onPressed: () async {
+                          final db = await Hive.openBox('notes');
+
+                          await db.put(note.id, note.toMap());
+
+                          notes.value = await getNotes();
                           // setState(() {});
                         },
                       ),
@@ -69,112 +82,126 @@ class _AllNotesState extends State<AllNotes> {
       );
     }
 
-    return ListView.builder(
-      itemCount: widget.notes.length,
-      itemBuilder: (context, index) {
-        NoteModel note = widget.notes[index];
+    return ValueListenableBuilder(
+      valueListenable: notes,
+      builder: (context, value, child) {
+        return ListView.builder(
+          itemCount: value.length,
+          itemBuilder: (context, index) {
+            NoteModel note = value[index];
 
-        DateTime dateTime1 = note.createdAt;
+            DateTime dateTime1 = note.createdAt;
 
-        DateTime dateTime2 = note.editedAt;
+            DateTime dateTime2 = note.editedAt;
 
-        String time1 =
-            '${dateTime1.hour}:${dateTime1.minute}:${dateTime1.second} ${dateTime1.hour >= 12 ? 'PM' : 'AM'}';
-        String date = '${dateTime1.day}/${dateTime1.month}/${dateTime1.year}';
+            String time1 =
+                '${dateTime1.hour}:${dateTime1.minute}:${dateTime1.second} ${dateTime1.hour >= 12 ? 'PM' : 'AM'}';
+            String date =
+                '${dateTime1.day}/${dateTime1.month}/${dateTime1.year}';
 
-        String editedDate = '';
-        String editedTime = '';
+            String editedDate = '';
+            String editedTime = '';
 
-        if (dateTime2 == dateTime1) {
-          print('Both are equal');
-        }
+            if (dateTime2 == dateTime1) {
+              print('Both are equal');
+            }
 
-        if (dateTime1 != dateTime2) {
-          editedDate = '${dateTime2.day}/${dateTime2.month}/${dateTime2.year}';
-          editedTime =
-              '${dateTime2.hour}:${dateTime2.minute}:${dateTime2.second} ${dateTime2.hour >= 12 ? 'PM' : 'AM'}';
-        }
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-          child: GestureDetector(
-            onTap: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => EditorScreen(note: note),
-                ),
-              );
-              print('Popped');
-              // setState(() {});
-            },
-            child: Container(
-              decoration: BoxDecoration(
-                color: notesColor[note.colorIndex],
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+            if (dateTime1 != dateTime2) {
+              editedDate =
+                  '${dateTime2.day}/${dateTime2.month}/${dateTime2.year}';
+              editedTime =
+                  '${dateTime2.hour}:${dateTime2.minute}:${dateTime2.second} ${dateTime2.hour >= 12 ? 'PM' : 'AM'}';
+            }
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+              child: GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditorScreen(note: note),
+                    ),
+                  );
+                  print('Popped');
+                  // setState(() {});
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: notesColor[note.colorIndex],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Row(
+                          children: [
+                            Text(
+                              "$time1 $date",
+                              style: TextStyle(
+                                color:
+                                    notesColor[note.colorIndex] ==
+                                        AppColors.surface
+                                    ? AppColors.secondaryTextColor
+                                    : AppColors.surface,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (widget.isHomeScreen)
+                              InkWell(
+                                onTap: () {
+                                  showDeleteDialog(index);
+                                },
+                                child: Icon(
+                                  Icons.delete,
+                                  color: AppColors.error,
+                                ),
+                              ),
+                          ],
+                        ),
+                        if (note.title != '')
+                          Text(
+                            note.title,
+                            style: TextStyle(
+                              color:
+                                  notesColor[note.colorIndex] ==
+                                      AppColors.surface
+                                  ? AppColors.textColor
+                                  : AppColors.bg,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         Text(
-                          "$time1 $date",
+                          note.content,
                           style: TextStyle(
                             color:
                                 notesColor[note.colorIndex] == AppColors.surface
-                                ? AppColors.secondaryTextColor
-                                : AppColors.surface,
-                            fontSize: 12,
+                                ? AppColors.textColor
+                                : AppColors.bg,
                           ),
                         ),
-                        const Spacer(),
-                        if (widget.isHomeScreen)
-                          InkWell(
-                            onTap: () {
-                              showDeleteDialog(index);
-                            },
-                            child: Icon(Icons.delete, color: AppColors.error),
+                        if (note.editedAt != note.createdAt)
+                          Text(
+                            'Edited at: $editedTime $editedDate',
+                            style: TextStyle(
+                              color:
+                                  notesColor[note.colorIndex] ==
+                                      AppColors.surface
+                                  ? AppColors.secondaryTextColor
+                                  : AppColors.surface,
+                              fontSize: 12,
+                            ),
                           ),
                       ],
                     ),
-                    if (note.title != '')
-                      Text(
-                        note.title,
-                        style: TextStyle(
-                          color:
-                              notesColor[note.colorIndex] == AppColors.surface
-                              ? AppColors.textColor
-                              : AppColors.bg,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    Text(
-                      note.content,
-                      style: TextStyle(
-                        color: notesColor[note.colorIndex] == AppColors.surface
-                            ? AppColors.textColor
-                            : AppColors.bg,
-                      ),
-                    ),
-                    if (note.editedAt != note.createdAt)
-                      Text(
-                        'Edited at: $editedTime $editedDate',
-                        style: TextStyle(
-                          color:
-                              notesColor[note.colorIndex] == AppColors.surface
-                              ? AppColors.secondaryTextColor
-                              : AppColors.surface,
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
